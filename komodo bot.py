@@ -1,79 +1,44 @@
-import discord
 from dotenv import load_dotenv
+import requests
+import json
+import inspect
+import sys
 import os
+from discord import app_commands, Intents, Client, Interaction
+from colorama import Fore, Style
 
-#made by superking816pro at https://github.com/superking816pro
-#logo by catalyststuff on Freepik
+load_dotenv()
 
-# creating the bot object
-bot = discord.Client(intents=discord.Intents.all())
 
-# Credentials
-load_dotenv('.env')
+class FunnyBadge(Client):
+    def __init__(self, *, intents: Intents):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
 
-# EVENT LISTENER FOR WHEN THE BOT HAS SWITCHED FROM OFFLINE TO ONLINE.
-@bot.event
+    async def setup_hook(self) -> None:
+        """ This is called when the bot boots, to setup the global commands """
+        await self.tree.sync()
+
+
+client = FunnyBadge(intents=Intents.none())
+
+@client.event
 async def on_ready():
-    # CREATES A COUNTER TO KEEP TRACK OF HOW MANY GUILDS / SERVERS THE BOT IS CONNECTED TO.
-    guild_count = 0
+    print(inspect.cleandoc(f"""
+        Logged in as {client.user} (ID: {client.user.id})
+        Use this URL to invite {client.user} to your server:
+        {Fore.LIGHTBLUE_EX}https://discord.com/api/oauth2/authorize?client_id={client.user.id}&scope=applications.commands%20bot{Fore.RESET}
+    """), end="\n\n")
+    
+@client.tree.command()
+async def hello(interaction: Interaction):
+    """ Says hello or something """
+    # Responds in the console that the command has been ran
+    print(f">{interaction.user} used the command.")
 
-    # LOOPS THROUGH ALL THE GUILD / SERVERS THAT THE BOT IS ASSOCIATED WITH.
-    for guild in bot.guilds:
-        # PRINT THE SERVER'S ID AND NAME.
-        print(f"- {guild.id} (name: {guild.name})")
+    # Then responds in the channel with this message
+    await interaction.response.send_message(inspect.cleandoc(f"""
+        Hi **{interaction.user}**, thank you for saying hello to me."""))
 
-        # INCREMENTS THE GUILD COUNTER.
-        guild_count = guild_count + 1
-
-    # PRINTS HOW MANY GUILDS / SERVERS THE BOT IS IN.
-    print("komodo moderation bot is in " + str(guild_count) + " discord servers.")
-
-    print(f"Bot logged in as {bot.user}")
-
-# EVENT LISTENER FOR WHEN A NEW MESSAGE IS SENT TO A CHANNEL.
-@bot.event
-async def on_message(message):
-    if message.author != bot.user:
-        
-        if message.content == '!hello':
-            respond1 = "hello"
-            await message.channel.send(respond1)
-
-        if message.content == '!github-sourcecode':
-            respond2 = "soon to be added in github"
-            await message.channel.send(respond2)
-
-        if message.content == '!github':
-            respond3 = "my creator's github profile = https://github.com/superking816pro"
-            await message.channel.send(respond3)
-
-        if message.content == '!discord':
-            respond4 = "my creator's discord profile is private for now"
-            await message.channel.send(respond4)    
-
-# EXECUTES THE BOT WITH THE SPECIFIED TOKEN. TOKEN HAS BEEN REMOVED AND USED JUST AS AN EXAMPLE.
-bot.run(os.getenv('BOT_TOKEN'))
-
-print ("made by superking816pro at https://github.com/superking816pro")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Runs the bot with the token you provided
+client.run(os.getenv('BOT_TOKEN'))
